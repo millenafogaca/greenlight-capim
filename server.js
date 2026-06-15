@@ -10,7 +10,7 @@ const snowflake = require('snowflake-sdk');
 
 const app = express();
 app.use(cors());
-app.use(express.static(__dirname)); // serve o dashboard.html da mesma pasta
+app.use(express.static(process.pkg ? path.dirname(process.execPath) : __dirname)); // serve o dashboard.html da mesma pasta
 
 // ─── Conexão Snowflake ───
 const connection = snowflake.createConnection({
