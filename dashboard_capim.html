@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenLight — Capim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:      #00D18C;
+  --green-dim:  rgba(0,209,140,0.10);
+  --green-glow: rgba(0,209,140,0.20);
+  --bg:         #080E14;
+  --surface:    #0D1620;
+  --surface2:   #111D2A;
+  --border:     rgba(255,255,255,0.06);
+  --border-hi:  rgba(255,255,255,0.12);
+  --text:       #E8EEF4;
+  --muted:      #5A7A94;
+  --dim:        #2A3F52;
+  --red:        #FF4D5E;
+  --red-dim:    rgba(255,77,94,0.10);
+  --amber:      #FFB020;
+  --amber-dim:  rgba(255,176,32,0.10);
+  --blue:       #4D9EFF;
+  --r:          10px;
+  --rl:         14px;
+}
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border-hi); border-radius:4px; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+input[type=number] { -moz-appearance:textfield; appearance:textfield; }
+
+header { display:flex; align-items:center; justify-content:space-between; padding:0 40px; height:56px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; background:rgba(8,14,20,0.92); backdrop-filter:blur(20px); }
+.logo { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700; }
+.logo-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green-glow); }
+.logo-sep { color:var(--dim); font-weight:300; margin:0 2px; }
+.logo-sub { color:var(--muted); font-weight:400; }
+.header-date { font-family:'Outfit',sans-serif; font-size:12px; color:var(--muted); }
+
+main { max-width:1280px; margin:0 auto; padding:32px 40px; }
+.section-label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--dim); margin-bottom:12px; }
+
+.upload-section { margin-bottom:32px; }
+.upload-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.upload-card { border:1px solid var(--border); border-radius:var(--rl); padding:18px 20px; cursor:pointer; transition:border-color 0.2s, background 0.2s; position:relative; background:var(--surface); display:flex; align-items:center; gap:14px; }
+.upload-card:hover { border-color:var(--border-hi); background:var(--surface2); }
+.upload-card.loaded { border-color:rgba(0,209,140,0.3); background:rgba(0,209,140,0.03); }
+.upload-card input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.upload-icon { width:38px; height:38px; border-radius:9px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.upload-card.loaded .upload-icon { background:var(--green-dim); border-color:rgba(0,209,140,0.25); }
+.upload-text-title { font-size:12px; font-weight:600; margin-bottom:2px; }
+.upload-text-desc { font-size:11px; color:var(--muted); line-height:1.4; }
+.upload-text-status { font-size:11px; color:var(--green); font-weight:500; margin-top:3px; display:none; }
+.upload-card.loaded .upload-text-status { display:block; }
+
+.tab-row { display:flex; margin-bottom:28px; border-bottom:1px solid var(--border); }
+.tab { padding:10px 18px; font-size:12px; font-weight:600; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; border:none; background:transparent; color:var(--muted); transition:color 0.15s; position:relative; display:flex; align-items:center; gap:7px; margin-bottom:-1px; white-space:nowrap; }
+.tab::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--green); opacity:0; transition:opacity 0.15s; border-radius:2px 2px 0 0; }
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--text); }
+.tab.active::after { opacity:1; }
+.tab-badge { font-family:'Outfit',sans-serif; font-size:11px; font-weight:600; padding:1px 7px; border-radius:20px; background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+.tab.active .tab-badge { background:var(--green-dim); color:var(--green); border-color:rgba(0,209,140,0.25); }
+
+.stats-bar { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+.stats-bar.four { grid-template-columns:repeat(4,1fr); }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); padding:18px 22px; position:relative; overflow:hidden; }
+.stat-card::before { content:''; position:absolute; top:0; left:24px; right:24px; height:1px; background:linear-gradient(90deg,transparent,var(--border-hi),transparent); }
+.stat-label { font-size:10px; font-weight:600; letter-spacing:0.8px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.stat-value { font-family:'Outfit',sans-serif; font-size:28px; font-weight:600; letter-spacing:-0.5px; color:var(--text); line-height:1; }
+.stat-value.green { color:var(--green); }
+.stat-value.red   { color:var(--red); }
+.stat-value.amber { color:var(--amber); }
+.stat-value.blue  { color:var(--blue); }
+
+.filters { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+.filter-group { display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:0 12px; height:34px; transition:border-color 0.15s; }
+.filter-group:focus-within { border-color:var(--border-hi); }
+.fg-label { font-size:10px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+.fg-sep { color:var(--dim); font-size:11px; }
+.fg-input { background:transparent; border:none; font-size:12px; font-family:'Outfit',sans-serif; font-weight:500; color:var(--text); outline:none; width:75px; }
+.fg-input[type=date] { width:120px; color-scheme:dark; }
+.fg-input::placeholder { color:var(--muted); }
+.f-text { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:0 14px; height:34px; font-size:12px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--text); outline:none; transition:border-color 0.15s; min-width:200px; }
+.f-text:focus { border-color:var(--border-hi); }
+.f-text::placeholder { color:var(--muted); font-weight:500; }
+.f-select { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:0 12px; height:34px; font-size:12px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--text); outline:none; cursor:pointer; min-width:130px; transition:border-color 0.15s; }
+.f-select:focus { border-color:var(--border-hi); }
+.f-select option { background:var(--surface2); }
+.f-count { font-family:'Outfit',sans-serif; font-size:11px; color:var(--muted); margin-left:auto; font-weight:500; }
+.bulk-wrap { display:flex; gap:6px; align-items:flex-start; }
+.bulk-area { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:0 12px; font-size:11px; font-family:'Outfit',sans-serif; font-weight:500; color:var(--text); outline:none; resize:none; width:110px; height:34px; line-height:34px; transition:border-color 0.15s; white-space:nowrap; overflow:hidden; }
+.bulk-area:focus { border-color:var(--border-hi); }
+.bulk-area::placeholder { color:var(--muted); font-size:11px; font-weight:500; }
+.bulk-actions { display:flex; flex-direction:row; gap:4px; }
+.bulk-btn { height:34px; padding:0 10px; background:var(--green); color:#080E14; border:none; border-radius:var(--r); font-size:10px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:opacity 0.15s; white-space:nowrap; }
+.bulk-btn:hover { opacity:0.85; }
+.bulk-clear { height:34px; padding:0 10px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:var(--r); font-size:10px; font-weight:600; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.bulk-clear:hover { border-color:var(--border-hi); color:var(--text); }
+
+.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); overflow:hidden; }
+table { width:100%; border-collapse:collapse; }
+thead tr { background:var(--surface2); border-bottom:1px solid var(--border); }
+thead th { padding:10px 18px; text-align:left; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; white-space:nowrap; cursor:pointer; user-select:none; transition:color 0.15s; }
+thead th:hover { color:var(--text); }
+tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:rgba(255,255,255,0.02); }
+tbody td { padding:13px 18px; font-size:13px; }
+.td-id { font-family:'Outfit',sans-serif; font-size:12px; color:var(--muted); font-weight:500; }
+.td-name { font-weight:600; }
+.td-email { font-size:11px; color:var(--muted); }
+.td-c1 { font-family:'Outfit',sans-serif; font-weight:700; font-size:15px; }
+.td-c1.zero { color:var(--red); }
+.td-c1.low  { color:var(--amber); }
+.td-c1.ok   { color:var(--green); }
+.td-valor { font-family:'Outfit',sans-serif; font-weight:600; font-size:13px; color:var(--green); }
+.td-valor-null { font-size:11px; color:var(--dim); font-style:italic; }
+.td-date { font-family:'Outfit',sans-serif; font-size:12px; color:var(--muted); }
+.td-score { font-family:'Outfit',sans-serif; font-weight:700; font-size:13px; padding:3px 10px; border-radius:6px; display:inline-block; }
+.score-h { background:var(--green-dim); color:var(--green); border:1px solid rgba(0,209,140,0.2); }
+.score-b { background:rgba(77,158,255,0.10); color:var(--blue); border:1px solid rgba(77,158,255,0.2); }
+.score-m { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(255,176,32,0.2); }
+.score-o { background:rgba(255,140,0,0.10); color:#FF8C00; border:1px solid rgba(255,140,0,0.25); }
+.score-l { background:var(--red-dim); color:var(--red); border:1px solid rgba(255,77,94,0.2); }
+.btn-wa { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; background:rgba(37,211,102,0.1); border:1px solid rgba(37,211,102,0.2); cursor:pointer; text-decoration:none; font-size:14px; transition:background 0.15s; }
+.btn-wa:hover { background:rgba(37,211,102,0.2); }
+
+.ficha-search { display:flex; gap:10px; margin-bottom:28px; align-items:center; }
+.ficha-input { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:0 16px; height:40px; font-size:13px; font-family:'Outfit',sans-serif; color:var(--text); outline:none; width:200px; transition:border-color 0.15s; }
+.ficha-input:focus { border-color:var(--green); }
+.ficha-input::placeholder { color:var(--dim); }
+.ficha-btn { height:40px; padding:0 20px; background:var(--green); color:#080E14; border:none; border-radius:var(--r); font-size:12px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:opacity 0.15s; }
+.ficha-btn:hover { opacity:0.85; }
+.ficha-result { display:none; }
+.ficha-result.visible { display:block; }
+.ficha-header { display:flex; align-items:flex-start; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); padding:24px 28px; margin-bottom:16px; }
+.ficha-name { font-size:20px; font-weight:700; margin-bottom:4px; }
+.ficha-sub { font-size:12px; color:var(--muted); }
+.ficha-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.ficha-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); padding:16px 20px; }
+.ficha-card-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:8px; }
+.ficha-card-value { font-family:'Outfit',sans-serif; font-size:24px; font-weight:600; letter-spacing:-0.3px; }
+
+.cs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+.cs-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); padding:20px 22px; }
+.cs-name { font-size:13px; font-weight:600; margin-bottom:2px; }
+.cs-email { font-size:11px; color:var(--muted); margin-bottom:14px; }
+.cs-stats { display:flex; gap:20px; }
+.cs-stat-val { font-family:'Outfit',sans-serif; font-size:20px; font-weight:600; }
+.cs-stat-lab { font-size:10px; color:var(--muted); margin-top:1px; }
+
+.empty-state { text-align:center; padding:64px 32px; }
+.empty-icon { font-size:28px; margin-bottom:12px; opacity:0.4; }
+.empty-title { font-size:13px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+.empty-desc { font-size:11px; color:var(--dim); }
+
+.panel { display:none; }
+.panel.active { display:block; }
+.sort-asc::after  { content:' ↑'; color:var(--green); font-size:9px; }
+.sort-desc::after { content:' ↓'; color:var(--green); font-size:9px; }
+
+.status-bar { display:flex; align-items:center; gap:10px; padding:12px 18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); margin-bottom:24px; font-size:12px; color:var(--muted); }
+.status-dot { width:6px; height:6px; border-radius:50%; background:var(--dim); flex-shrink:0; }
+.status-dot.ok { background:var(--green); box-shadow:0 0 6px var(--green-glow); }
+.status-dot.loading { background:var(--amber); animation:pulse 1s ease-in-out infinite; }
+.status-dot.error { background:var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.status-time { margin-left:auto; font-family:'Outfit',sans-serif; font-size:11px; }
+.btn-refresh { display:flex; align-items:center; gap:7px; padding:0 16px; height:32px; background:var(--green); color:#080E14; border:none; border-radius:var(--r); font-size:11px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:opacity 0.15s; letter-spacing:0.3px; }
+.btn-refresh:hover { opacity:0.85; }
+.btn-refresh:disabled { opacity:0.4; cursor:not-allowed; }
+.spin { display:inline-block; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    GreenLight
+    <span class="logo-sep">—</span>
+    <span class="logo-sub">Capim</span>
+  </div>
+  <span class="header-date" id="header-date"></span>
+</header>
+
+<main>
+
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Clique em "Atualizar dados" para buscar do Snowflake</span>
+    <span class="status-time" id="status-time"></span>
+    <button class="btn-refresh" id="btn-refresh" onclick="loadAllData()">
+      <span id="refresh-icon">↻</span> Atualizar dados
+    </button>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab('c1')">C1s — 7 dias <span class="tab-badge" id="badge-c1">0</span></button>
+    <button class="tab" onclick="switchTab('c2')">C2 no mês <span class="tab-badge" id="badge-c2">0</span></button>
+    <button class="tab" onclick="switchTab('ficha')">Ficha da Clínica</button>
+    <button class="tab" onclick="switchTab('cs')">Por Responsável CS <span class="tab-badge" id="badge-cs">0</span></button>
+  </div>
+
+  <!-- C1 -->
+  <div class="panel active" id="panel-c1">
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-label">Total de clínicas</div><div class="stat-value" id="stat-c1-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">Sem nenhum C1</div><div class="stat-value red" id="stat-c1-zero">—</div></div>
+      <div class="stat-card"><div class="stat-label">Com 1 a 4 C1s</div><div class="stat-value amber" id="stat-c1-low">—</div></div>
+    </div>
+    <div class="filters">
+      <input class="f-text" type="text" placeholder="Buscar por nome ou ID..." oninput="filterTable('c1')" id="search-c1">
+      <select class="f-select" onchange="filterTable('c1')" id="cred-c1">
+        <option value="">Todos credenciamentos</option>
+        <option value="Credenciamento Concluído">Concluído</option>
+        <option value="Incompleta">Incompleta</option>
+        <option value="Em análise (fase 1)">Em análise (fase 1)</option>
+        <option value="Em análise (fase 2)">Em análise (fase 2)</option>
+        <option value="Com pendência (fase 1)">Com pendência (fase 1)</option>
+        <option value="Com pendência (fase 2)">Com pendência (fase 2)</option>
+        <option value="Aguardando envio">Aguardando envio</option>
+        <option value="Credenciamento Reprovado">Reprovado</option>
+        <option value="__EMPTY__">Sem credenciamento</option>
+      </select>
+      <div class="filter-group">
+        <span class="fg-label">C1s</span>
+        <input class="fg-input" type="number" placeholder="de" oninput="filterTable('c1')" id="c1-from">
+        <span class="fg-sep">→</span>
+        <input class="fg-input" type="number" placeholder="até" oninput="filterTable('c1')" id="c1-to">
+      </div>
+      <div class="filter-group">
+        <span class="fg-label">ID</span>
+        <input class="fg-input" type="number" placeholder="de" oninput="filterTable('c1')" id="id-from-c1">
+        <span class="fg-sep">→</span>
+        <input class="fg-input" type="number" placeholder="até" oninput="filterTable('c1')" id="id-to-c1">
+      </div>
+      <div class="bulk-wrap">
+        <textarea class="bulk-area" id="ids-multi-c1" placeholder="IDs por linha"></textarea>
+        <div class="bulk-actions">
+          <button class="bulk-btn" onclick="filterTable('c1')">Filtrar ↵</button>
+          <button class="bulk-clear" onclick="clearBulk('c1')">Limpar</button>
+        </div>
+      </div>
+      <span class="f-count" id="count-c1"></span>
+    </div>
+    <div class="table-wrap">
+      <table id="table-c1">
+        <thead><tr>
+          <th onclick="sortTable('c1',0)">ID</th>
+          <th onclick="sortTable('c1',1)">Clínica</th>
+          <th onclick="sortTable('c1',2)">Credenciamento</th>
+          <th onclick="sortTable('c1',3)">Score</th>
+          <th onclick="sortTable('c1',4)">C1s (7 dias)</th>
+          <th>WhatsApp</th>
+        </tr></thead>
+        <tbody id="tbody-c1"><tr><td colspan="6"><div class="empty-state"><div class="empty-icon">↻</div><div class="empty-title">Nenhum dado carregado</div><div class="empty-desc">Clique em "Atualizar dados" no topo</div></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- C2 -->
+  <div class="panel" id="panel-c2">
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-label">Clínicas com C2</div><div class="stat-value" id="stat-c2-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">Valor total originado</div><div class="stat-value green" id="stat-c2-valor">—</div></div>
+      <div class="stat-card"><div class="stat-label">Ticket médio</div><div class="stat-value" id="stat-c2-media">—</div></div>
+    </div>
+    <div class="filters">
+      <input class="f-text" type="text" placeholder="Buscar por nome ou ID..." oninput="filterTable('c2')" id="search-c2">
+      <select class="f-select" onchange="filterTable('c2')" id="cs-c2"><option value="">Todos os CS</option></select>
+      <div class="filter-group">
+        <span class="fg-label">ID</span>
+        <input class="fg-input" type="number" placeholder="de" oninput="filterTable('c2')" id="id-from-c2">
+        <span class="fg-sep">→</span>
+        <input class="fg-input" type="number" placeholder="até" oninput="filterTable('c2')" id="id-to-c2">
+      </div>
+      <div class="filter-group">
+        <span class="fg-label">Data C2</span>
+        <input class="fg-input" type="date" oninput="filterTable('c2')" id="date-from-c2">
+        <span class="fg-sep">→</span>
+        <input class="fg-input" type="date" oninput="filterTable('c2')" id="date-to-c2">
+      </div>
+      <div class="bulk-wrap">
+        <textarea class="bulk-area" id="ids-multi-c2" placeholder="IDs por linha"></textarea>
+        <div class="bulk-actions">
+          <button class="bulk-btn" onclick="filterTable('c2')">Filtrar ↵</button>
+          <button class="bulk-clear" onclick="clearBulk('c2')">Limpar</button>
+        </div>
+      </div>
+      <span class="f-count" id="count-c2"></span>
+    </div>
+    <div class="table-wrap">
+      <table id="table-c2">
+        <thead><tr>
+          <th onclick="sortTable('c2',0)">ID</th>
+          <th onclick="sortTable('c2',1)">Clínica</th>
+          <th onclick="sortTable('c2',2)">Responsável CS</th>
+          <th onclick="sortTable('c2',3)">Score</th>
+          <th onclick="sortTable('c2',4)">Data C2</th>
+          <th onclick="sortTable('c2',5)">Valor Originado</th>
+          <th>WhatsApp</th>
+        </tr></thead>
+        <tbody id="tbody-c2"><tr><td colspan="7"><div class="empty-state"><div class="empty-icon">↻</div><div class="empty-title">Nenhum dado carregado</div><div class="empty-desc">Clique em "Atualizar dados" no topo</div></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FICHA -->
+  <div class="panel" id="panel-ficha">
+    <div class="ficha-search">
+      <input class="ficha-input" type="number" placeholder="ID da clínica" id="ficha-id-input">
+      <button class="ficha-btn" onclick="buscarFicha()">Buscar</button>
+    </div>
+    <div class="ficha-result" id="ficha-result">
+      <div class="ficha-header">
+        <div>
+          <div class="ficha-name" id="ficha-nome">—</div>
+          <div class="ficha-sub" id="ficha-sub">—</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div id="ficha-score-badge"></div>
+          <a id="ficha-wa" href="#" target="_blank" class="btn-wa">💬</a>
+        </div>
+      </div>
+      <div class="ficha-grid">
+        <div class="ficha-card"><div class="ficha-card-label">C1s — 7 dias</div><div class="ficha-card-value" id="ficha-c1-7" style="color:var(--amber)">—</div></div>
+        <div class="ficha-card"><div class="ficha-card-label">C1s — 30 dias</div><div class="ficha-card-value" id="ficha-c1-30">—</div></div>
+        <div class="ficha-card"><div class="ficha-card-label">Total de C2s</div><div class="ficha-card-value" id="ficha-c2t" style="color:var(--green)">—</div></div>
+        <div class="ficha-card"><div class="ficha-card-label">Valor Originado</div><div class="ficha-card-value" id="ficha-valor" style="color:var(--green);font-size:18px">—</div></div>
+        <div class="ficha-card"><div class="ficha-card-label">Ticket Médio</div><div class="ficha-card-value" id="ficha-ticket" style="font-size:18px">—</div></div>
+        <div class="ficha-card"><div class="ficha-card-label">Credenciamento</div><div class="ficha-card-value" id="ficha-cred" style="font-size:14px;color:var(--muted)">—</div></div>
+        <div class="ficha-card"><div class="ficha-card-label">Engajamento</div><div class="ficha-card-value" id="ficha-eng" style="font-size:14px;color:var(--muted)">—</div></div>
+        <div class="ficha-card"><div class="ficha-card-label">Responsável CS</div><div class="ficha-card-value" id="ficha-cs" style="font-size:12px;color:var(--muted)">—</div></div>
+      </div>
+    </div>
+    <div id="ficha-empty" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">Digite o ID da clínica</div>
+      <div class="empty-desc">Atualize os dados primeiro e busque pelo ID</div>
+    </div>
+  </div>
+
+  <!-- CS -->
+  <div class="panel" id="panel-cs">
+    <div class="filters" style="margin-bottom:20px">
+      <input class="f-text" type="text" placeholder="Buscar responsável..." oninput="filterCS()" id="search-cs">
+      <span class="f-count" id="count-cs"></span>
+    </div>
+    <div class="cs-grid" id="cs-grid">
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon">↻</div>
+        <div class="empty-title">Nenhum dado carregado</div>
+        <div class="empty-desc">Clique em "Atualizar dados" no topo</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const data={c1:[],c2:[],clinicas:[]};
+const sortState={c1:{col:-1,dir:1},c2:{col:-1,dir:1}};
+
+document.getElementById('header-date').textContent=
+  new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim().toUpperCase().replace(/"/g,''));
+  return lines.slice(1).map(line=>{
+    const vals=line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)||[];
+    const obj={};
+    headers.forEach((h,i)=>{obj[h]=(vals[i]||'').replace(/^"|"$/g,'').trim();});
+    return obj;
+  });
+}
+
+function setStatus(state,text,time){
+  document.getElementById('status-dot').className='status-dot'+(state?' '+state:'');
+  document.getElementById('status-text').textContent=text;
+  if(time)document.getElementById('status-time').textContent=time;
+}
+
+async function loadAllData(){
+  const btn=document.getElementById('btn-refresh');
+  const icon=document.getElementById('refresh-icon');
+  btn.disabled=true; icon.className='spin';
+  setStatus('loading','Buscando dados do Snowflake...');
+
+  async function fetchSafe(url){
+    const r = await fetch(url);
+    if(!r.ok){
+      const txt = await r.text();
+      throw new Error(`${url} → ${r.status}: ${txt.slice(0,200)}`);
+    }
+    const j = await r.json();
+    if(j.error) throw new Error(`${url} → ${j.error}`);
+    if(!Array.isArray(j)) throw new Error(`${url} → resposta não é array: ${JSON.stringify(j).slice(0,200)}`);
+    return j;
+  }
+
+  try {
+    const [c1,c2,clinicas] = await Promise.all([
+      fetchSafe('/api/c1'),
+      fetchSafe('/api/c2'),
+      fetchSafe('/api/clinicas')
+    ]);
+
+    data.c1 = c1;
+    data.c2 = c2;
+    data.clinicas = clinicas;
+
+    renderC1(); renderC2(); renderCS();
+
+    const now = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    setStatus('ok',`${c1.length} clínicas sem C1 · ${c2.length} C2s no mês · ${clinicas.length} clínicas na base`,`Atualizado às ${now}`);
+  } catch(err) {
+    console.error(err);
+    setStatus('error',`Erro: ${err.message}`);
+  } finally {
+    btn.disabled=false;
+    icon.className='';
+  }
+}
+
+// Carrega automaticamente ao abrir a página
+window.addEventListener('load', loadAllData);
+
+function switchTab(tab){
+  const tabs=['c1','c2','ficha','cs'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===tab));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+function fmtVal(v){
+  const n=parseFloat(String(v||'').replace(/\s/g,'').replace(/\./g,'').replace(',','.'));
+  if(isNaN(n)||v==='')return null;
+  return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(n);
+}
+function parseId(v){return parseInt(String(v||'').replace(/\s/g,''));}
+function c1Cls(n){return n===0?'zero':n<5?'low':'ok';}
+function parseDate(str){
+  if(!str)return new Date(0);
+  if(str.match(/^\d{4}-\d{2}-\d{2}/))return new Date(str);
+  const months={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
+  const m=str.match(/(\d+)\s+(\w+)[\.,]+\s+(\d{4})/);
+  if(m)return new Date(parseInt(m[3]),months[m[2].toLowerCase().slice(0,3)]??0,parseInt(m[1]));
+  return new Date(str);
+}
+function scoreBadge(s){
+  if(s===null||s===undefined||s==='')return '<span style="color:var(--dim);font-size:11px">—</span>';
+  const n=parseFloat(s);
+  let cls='score-m';
+  if(!isNaN(n)){
+    if(n<=1)cls='score-h';           // 0 ou 1 → verde
+    else if(n<=3)cls='score-b';      // 2 ou 3 → azul
+    else if(n===4||n===5)cls='score-o'; // 4 ou 5 → laranja
+    else cls='score-l';              // 6 ou mais → vermelho
+  }
+  return `<span class="td-score ${cls}">${s}</span>`;
+}
+function credBadge(s){
+  if(!s)return '<span style="color:var(--dim);font-size:11px">—</span>';
+  const sl=s.toLowerCase();
+  let cls='score-m';
+  if(sl.includes('conclu'))cls='score-h';
+  else if(sl.includes('reprova')||sl.includes('pendên'))cls='score-l';
+  return `<span class="td-score ${cls}" style="font-size:11px;font-weight:600">${s}</span>`;
+}
+function waBtn(phone){
+  if(!phone)return '<span style="color:var(--dim);font-size:11px">—</span>';
+  const clean=phone.replace(/\D/g,'');
+  return `<a href="https://wa.me/55${clean}" target="_blank" class="btn-wa">💬</a>`;
+}
+function getCredStatus(id){
+  const c=data.clinicas.find(r=>parseId(r.CLINIC_ID)===parseId(id));
+  return c?c.STATUS_CREDENCIAMENTO||c.FRIENDLY_ACCREDITATION_STATUS||'':'';
+}
+function getScore(id){
+  const c=data.clinicas.find(r=>parseId(r.CLINIC_ID)===parseId(id));
+  return c?String(c.SCORE||c.CLINIC_CREDIT_SCORE||''):'';
+}
+function getPhone(id){
+  const c=data.clinicas.find(r=>parseId(r.CLINIC_ID)===parseId(id));
+  return c?c.PHONE_NUMBER||'':'';
+}
+
+function renderC1(){
+  const rows=data.c1;
+  document.getElementById('badge-c1').textContent=rows.length;
+  document.getElementById('stat-c1-total').textContent=rows.length;
+  document.getElementById('stat-c1-zero').textContent=rows.filter(r=>parseInt(r.C1S_ULTIMOS_7_DIAS||0)===0).length;
+  document.getElementById('stat-c1-low').textContent=rows.filter(r=>{const n=parseInt(r.C1S_ULTIMOS_7_DIAS||0);return n>0&&n<5;}).length;
+  filterTable('c1');
+}
+
+function renderC2(){
+  const rows=data.c2;
+  document.getElementById('badge-c2').textContent=rows.length;
+  document.getElementById('stat-c2-total').textContent=rows.length;
+  const total=rows.reduce((a,r)=>{const n=parseFloat(String(r.VALOR_ORIGINADO||'').replace(/\s/g,'').replace(/\./g,'').replace(',','.'));return a+(isNaN(n)?0:n);},0);
+  const withVal=rows.filter(r=>r.VALOR_ORIGINADO&&r.VALOR_ORIGINADO!=='').length;
+  const fmt=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(v);
+  document.getElementById('stat-c2-valor').textContent=total>0?fmt(total):'—';
+  document.getElementById('stat-c2-media').textContent=(total>0&&withVal>0)?fmt(total/withVal):'—';
+  const cs=[...new Set(rows.map(r=>r.OWNER_EMAIL).filter(Boolean))];
+  
+  const sel=document.getElementById('cs-c2');
+  sel.innerHTML='<option value="">Todos os CS</option>';
+  cs.sort().forEach(c=>sel.innerHTML+=`<option value="${c}">${c}</option>`);
+  filterTable('c2');
+}
+
+function renderCS(){
+  const all=[...data.c1,...data.c2];
+  const emails=[...new Set(all.map(r=>r.OWNER_EMAIL).filter(Boolean))].sort();
+  document.getElementById('badge-cs').textContent=emails.length;
+  buildCSCards(emails);
+}
+
+function buildCSCards(emails){
+  const grid=document.getElementById('cs-grid');
+  if(!emails.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">↻</div><div class="empty-title">Nenhum dado</div><div class="empty-desc">Clique em "Atualizar dados" no topo</div></div>`;return;}
+  document.getElementById('count-cs').textContent=emails.length+' responsáveis';
+  const fmt=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(v);
+  grid.innerHTML=emails.map(email=>{
+    const c1r=data.c1.filter(r=>r.OWNER_EMAIL===email);
+    const c2r=data.c2.filter(r=>r.OWNER_EMAIL===email);
+    const sem=c1r.filter(r=>parseInt(r.C1S_ULTIMOS_7_DIAS||0)===0).length;
+    const tot=c2r.reduce((a,r)=>{const n=parseFloat(String(r.VALOR_ORIGINADO||'').replace(/\s/g,'').replace(/\./g,'').replace(',','.'));return a+(isNaN(n)?0:n);},0);
+    const name=email.split('@')[0].replace('.',' ').replace(/\b\w/g,l=>l.toUpperCase());
+    return `<div class="cs-card"><div class="cs-name">${name}</div><div class="cs-email">${email}</div><div class="cs-stats">
+      <div><div class="cs-stat-val">${c1r.length}</div><div class="cs-stat-lab">C1s</div></div>
+      <div><div class="cs-stat-val" style="color:var(--red)">${sem}</div><div class="cs-stat-lab">Sem C1</div></div>
+      <div><div class="cs-stat-val" style="color:var(--green)">${c2r.length}</div><div class="cs-stat-lab">C2 no mês</div></div>
+      <div><div class="cs-stat-val" style="color:var(--green);font-size:14px">${tot>0?fmt(tot):'—'}</div><div class="cs-stat-lab">Originado</div></div>
+    </div></div>`;
+  }).join('');
+}
+
+function filterCS(){
+  const s=(document.getElementById('search-cs').value||'').toLowerCase();
+  const all=[...data.c1,...data.c2];
+  const emails=[...new Set(all.map(r=>r.OWNER_EMAIL).filter(Boolean))].sort().filter(e=>!s||e.toLowerCase().includes(s));
+  document.getElementById('count-cs').textContent=emails.length+' responsáveis';
+  buildCSCards(emails);
+}
+
+function filterTable(type){
+  const search=(document.getElementById('search-'+type)?.value||'').toLowerCase();
+  const cs=(document.getElementById('cs-'+type)?.value||'');
+  const cred=type==='c1'?(document.getElementById('cred-c1')?.value||''):'';
+  const c1From=type==='c1'?parseInt(document.getElementById('c1-from')?.value||''):NaN;
+  const c1To=type==='c1'?parseInt(document.getElementById('c1-to')?.value||''):NaN;
+  const idFrom=parseInt(document.getElementById('id-from-'+type)?.value||'');
+  const idTo=parseInt(document.getElementById('id-to-'+type)?.value||'');
+  const dFrom=type==='c2'?document.getElementById('date-from-c2')?.value:'';
+  const dTo=type==='c2'?document.getElementById('date-to-c2')?.value:'';
+  const multi=(document.getElementById('ids-multi-'+type)?.value||'').trim();
+  const mIds=multi?multi.split(/[\s\n,;]+/).map(v=>parseInt(v.trim())).filter(n=>!isNaN(n)):[];
+  let rows=data[type];
+
+  if(search)rows=rows.filter(r=>(r.CLINIC_NAME||'').toLowerCase().includes(search)||String(r.CLINIC_ID||'').includes(search));
+  if(cs)rows=rows.filter(r=>r.OWNER_EMAIL===cs);
+  if(cred==='__EMPTY__')rows=rows.filter(r=>!getCredStatus(r.CLINIC_ID));
+  else if(cred)rows=rows.filter(r=>getCredStatus(r.CLINIC_ID)===cred);
+  if(!isNaN(c1From))rows=rows.filter(r=>parseInt(r.C1S_ULTIMOS_7_DIAS||0)>=c1From);
+  if(!isNaN(c1To))rows=rows.filter(r=>parseInt(r.C1S_ULTIMOS_7_DIAS||0)<=c1To);
+  if(!isNaN(idFrom))rows=rows.filter(r=>parseId(r.CLINIC_ID)>=idFrom);
+  if(!isNaN(idTo))rows=rows.filter(r=>parseId(r.CLINIC_ID)<=idTo);
+  if(dFrom)rows=rows.filter(r=>parseDate(r.DATA_C2)>=new Date(dFrom));
+  if(dTo)rows=rows.filter(r=>parseDate(r.DATA_C2)<=new Date(dTo+'T23:59:59'));
+  if(mIds.length)rows=rows.filter(r=>mIds.includes(parseId(r.CLINIC_ID)));
+
+  document.getElementById('count-'+type).textContent=rows.length+' resultados';
+  drawTable(type,rows);
+}
+
+function clearBulk(type){
+  document.getElementById('ids-multi-'+type).value='';
+  filterTable(type);
+}
+
+function drawTable(type,rows){
+  const tbody=document.getElementById('tbody-'+type);
+  const cols=type==='c1'?6:7;
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="${cols}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Nenhum resultado</div><div class="empty-desc">Tente ajustar os filtros</div></div></td></tr>`;return;}
+  if(type==='c1'){
+    tbody.innerHTML=rows.map(r=>{
+      const c1=parseInt(r.C1S_ULTIMOS_7_DIAS||0);
+      return `<tr>
+        <td class="td-id">${r.CLINIC_ID||''}</td>
+        <td class="td-name">${r.CLINIC_NAME||'—'}</td>
+        <td>${credBadge(getCredStatus(r.CLINIC_ID))}</td>
+        <td>${scoreBadge(getScore(r.CLINIC_ID))}</td>
+        <td><span class="td-c1 ${c1Cls(c1)}">${c1}</span></td>
+        <td>${waBtn(getPhone(r.CLINIC_ID))}</td>
+      </tr>`;
+    }).join('');
+  }else{
+    tbody.innerHTML=rows.map(r=>{
+      const val=fmtVal(r.VALOR_ORIGINADO);
+      return `<tr>
+        <td class="td-id">${r.CLINIC_ID||''}</td>
+        <td class="td-name">${r.CLINIC_NAME||'—'}</td>
+        <td class="td-email">${r.OWNER_EMAIL||'—'}</td>
+        <td>${scoreBadge(getScore(r.CLINIC_ID))}</td>
+        <td class="td-date">${r.DATA_C2||'—'}</td>
+        <td>${val?`<span class="td-valor">${val}</span>`:'<span class="td-valor-null">sem originação</span>'}</td>
+        <td>${waBtn(getPhone(r.CLINIC_ID))}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function sortTable(type,col){
+  const st=sortState[type];
+  st.dir=st.col===col?st.dir*-1:1;st.col=col;
+  const keys={c1:['CLINIC_ID','CLINIC_NAME','STATUS_CREDENCIAMENTO','SCORE','C1S_ULTIMOS_7_DIAS'],c2:['CLINIC_ID','CLINIC_NAME','OWNER_EMAIL','SCORE','DATA_C2','VALOR_ORIGINADO']};
+  const key=keys[type][col];
+  data[type].sort((a,b)=>{
+    const av=a[key]||'',bv=b[key]||'';
+    const an=parseFloat(String(av).replace(/\s/g,'').replace(/\./g,'').replace(',','.'));
+    const bn=parseFloat(String(bv).replace(/\s/g,'').replace(/\./g,'').replace(',','.'));
+    if(!isNaN(an)&&!isNaN(bn))return(an-bn)*st.dir;
+    return String(av).localeCompare(String(bv))*st.dir;
+  });
+  document.querySelectorAll(`#table-${type} thead th`).forEach((th,i)=>{th.classList.remove('sort-asc','sort-desc');if(i===col)th.classList.add(st.dir===1?'sort-asc':'sort-desc');});
+  filterTable(type);
+}
+
+function buscarFicha(){
+  const id=document.getElementById('ficha-id-input').value.trim();
+  if(!id)return;
+  const c=data.clinicas.find(r=>String(parseId(r.CLINIC_ID))===String(parseId(id)));
+  const result=document.getElementById('ficha-result');
+  const empty=document.getElementById('ficha-empty');
+  if(!c){result.classList.remove('visible');empty.style.display='block';empty.querySelector('.empty-title').textContent='Clínica não encontrada';empty.querySelector('.empty-desc').textContent='Verifique o ID ou carregue a base de clínicas';return;}
+  empty.style.display='none';result.classList.add('visible');
+  const phone=c.PHONE_NUMBER||'';
+  document.getElementById('ficha-nome').textContent=c.CLINIC_NAME||'—';
+  document.getElementById('ficha-sub').textContent=`ID ${c.CLINIC_ID} · ${c.OWNER_EMAIL||'sem responsável'}`;
+  document.getElementById('ficha-score-badge').innerHTML=scoreBadge(c.SCORE||c.CLINIC_CREDIT_SCORE||'');
+  document.getElementById('ficha-wa').href=phone?`https://wa.me/55${phone.replace(/\D/g,'')}`:'#';
+  document.getElementById('ficha-c1-7').textContent=c.C1S_7_DIAS||'0';
+  document.getElementById('ficha-c1-30').textContent=c.C1S_30_DIAS||'0';
+  document.getElementById('ficha-c2t').textContent=c.TOTAL_C2S||'0';
+  document.getElementById('ficha-valor').textContent=fmtVal(c.VALOR_ORIGINADO_TOTAL)||'—';
+  document.getElementById('ficha-ticket').textContent=fmtVal(c.TICKET_MEDIO)||'—';
+  document.getElementById('ficha-cred').textContent=c.STATUS_CREDENCIAMENTO||'—';
+  document.getElementById('ficha-eng').textContent=(c.ENGAGEMENT_STATUS||'—').replace(/^\d+\.\s*/,'');
+  document.getElementById('ficha-cs').textContent=c.OWNER_EMAIL||'—';
+}
+
+document.getElementById('ficha-id-input').addEventListener('keydown',e=>{if(e.key==='Enter')buscarFicha();});
+</script>
+</body>
+</html>
